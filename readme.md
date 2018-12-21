@@ -2,10 +2,11 @@
 -- to design a table of a mole-game experiment.
 -- as for the design prj, check the document: https://docs.google.com/document/d/1j8t6NA-VuCN-Exy-PXwb4sIpkI5HYNOl6rnEO9dngIc/edit
 
-#get_rgbd
+# get_rgbd
+
 - includes files to get rgbd-data.
 
-#before usage
+# before usage
 - setup PC so that RealSense, Nuitrack and OpenGL could be used.
 
   - check the wiki page to use realsense: 
