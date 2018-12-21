@@ -1,6 +1,7 @@
 - 2018/12/21, kazumi
--- to design a table of a mole-game experiment.
--- as for the design prj, check the document: https://docs.google.com/document/d/1j8t6NA-VuCN-Exy-PXwb4sIpkI5HYNOl6rnEO9dngIc/edit
+
+  - to design a table of a mole-game experiment.
+  - as for the design prj, check the document: https://docs.google.com/document/d/1j8t6NA-VuCN-Exy-PXwb4sIpkI5HYNOl6rnEO9dngIc/edit
 
 # get_rgbd
 
