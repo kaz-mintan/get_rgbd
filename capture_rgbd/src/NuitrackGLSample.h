@@ -15,7 +15,6 @@
 
 #include <string>
 
-
 typedef enum
 {
 	DEPTH_SEGMENT_MODE = 0,

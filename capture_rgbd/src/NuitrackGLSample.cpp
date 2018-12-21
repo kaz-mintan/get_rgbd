@@ -4,7 +4,6 @@
 #include <cstring>
 #include <iostream>
 
-#include <opencv2/opencv.hpp>
 
 using namespace tdv::nuitrack;
 
@@ -199,11 +198,6 @@ void NuitrackGLSample::onNewRGBFrame(RGBFrame::Ptr frame)
 	float hStep = (float)_height / frame->getRows();
 
 	float nextVerticalBorder = hStep;
-
-  cv::Mat cv_frame;
-  cv_frame = cv::imread("mogura.png");
-  cv::namedWindow("show",CV_WINDOW_AUTOSIZE|CV_WINDOW_FREERATIO);
-  cv::imshow("show",cv_frame);
 
 	for (size_t i = 0; i < _height; ++i)
 	{
