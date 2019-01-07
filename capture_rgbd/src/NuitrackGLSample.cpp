@@ -176,7 +176,7 @@ void NuitrackGLSample::onNewDepthFrame(DepthFrame::Ptr frame)
   char d_name[50];
   std::ofstream test_d;
   //sprintf(d_name,"%d.csv",t_st->tm_sec);
-  sprintf(d_name,"rgbd/d-%d%02d%02d-%02d-%02d-%02d.%06d.csv",
+  sprintf(d_name,"rgbd/d-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
     t_st->tm_year+1900,
     t_st->tm_mon+1,
     t_st->tm_mday,
@@ -233,7 +233,7 @@ void NuitrackGLSample::onNewRGBFrame(RGBFrame::Ptr frame)
   char g_name[50];
   char b_name[50];
 
-  sprintf(r_name,"rgbd/r-%d%02d%02d-%02d-%02d-%02d.%06d.csv",
+  sprintf(r_name,"rgbd/r-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
     t_st->tm_year+1900,
     t_st->tm_mon+1,
     t_st->tm_mday,
@@ -242,7 +242,7 @@ void NuitrackGLSample::onNewRGBFrame(RGBFrame::Ptr frame)
     t_st->tm_sec,
     myTime.tv_usec);
 
-  sprintf(g_name,"rgbd/g-%d%02d%02d-%02d-%02d-%02d.%06d.csv",
+  sprintf(g_name,"rgbd/g-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
     t_st->tm_year+1900,
     t_st->tm_mon+1,
     t_st->tm_mday,
@@ -251,7 +251,7 @@ void NuitrackGLSample::onNewRGBFrame(RGBFrame::Ptr frame)
     t_st->tm_sec,
     myTime.tv_usec);
 
-  sprintf(b_name,"rgbd/b-%d%02d%02d-%02d-%02d-%02d.%06d.csv",
+  sprintf(b_name,"rgbd/b-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
     t_st->tm_year+1900,
     t_st->tm_mon+1,
     t_st->tm_mday,
