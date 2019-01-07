@@ -3,6 +3,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <iostream>
+#include <fstream>
 
 
 using namespace tdv::nuitrack;
@@ -156,6 +157,11 @@ void NuitrackGLSample::onNewDepthFrame(DepthFrame::Ptr frame)
 	float hStep = (float)_height / frame->getRows();
 	
 	float nextVerticalBorder = hStep;
+
+  //test to save depth data
+  std::ofstream test_write;
+  test_write.open("depth_test.csv");
+  //uint8_t data[_width][_height]={0};
 	
 	for (size_t i = 0; i < _height; ++i)
 	{
@@ -181,7 +187,11 @@ void NuitrackGLSample::onNewDepthFrame(DepthFrame::Ptr frame)
 			texturePtr[0] = depthValue;
 			texturePtr[1] = depthValue;
 			texturePtr[2] = depthValue;
+			test_write<<depthValue;
+      std::cout<<j<<std::endl;
+      if(j!=_width-1)  test_write<<",";
 		}
+		test_write<<std::endl;
 	}
 }
 
