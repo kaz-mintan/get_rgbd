@@ -4,7 +4,10 @@
 #include <cstring>
 #include <iostream>
 #include <fstream>
+#include <unistd.h>
+#include <time.h>
 
+#include <string>
 
 using namespace tdv::nuitrack;
 
@@ -13,7 +16,7 @@ NuitrackGLSample::NuitrackGLSample() :
 	_textureBuffer(0),
 	_width(640),
 	_height(480),
-	_viewMode(DEPTH_SEGMENT_MODE),
+	_viewMode(RGB_MODE),
 	_modesNumber(2),
 	_isInitialized(false)
 {}
@@ -161,8 +164,7 @@ void NuitrackGLSample::onNewDepthFrame(DepthFrame::Ptr frame)
   //test to save depth data
   std::ofstream test_write;
   test_write.open("depth_test.csv");
-  //uint8_t data[_width][_height]={0};
-	
+
 	for (size_t i = 0; i < _height; ++i)
 	{
 		if (i == (int)nextVerticalBorder)
@@ -188,7 +190,6 @@ void NuitrackGLSample::onNewDepthFrame(DepthFrame::Ptr frame)
 			texturePtr[1] = depthValue;
 			texturePtr[2] = depthValue;
 			test_write<<depthValue;
-      std::cout<<j<<std::endl;
       if(j!=_width-1)  test_write<<",";
 		}
 		test_write<<std::endl;
@@ -206,6 +207,26 @@ void NuitrackGLSample::onNewRGBFrame(RGBFrame::Ptr frame)
 
 	float wStep = (float)_width / frame->getCols();
 	float hStep = (float)_height / frame->getRows();
+
+  time_t timer;
+  time(&timer);
+  struct tm *t_st;
+  t_st=localtime(&timer);
+
+  char r_name[100];
+  char g_name[100];
+  char b_name[100];
+  sprintf(r_name,"r_%d.csv",t_st->tm_sec);
+  sprintf(g_name,"g_%d.csv",t_st->tm_sec);
+  sprintf(b_name,"b_%d.csv",t_st->tm_sec);
+
+  //test to save rgb data
+  std::ofstream test_r;
+  std::ofstream test_g;
+  std::ofstream test_b;
+  test_r.open(r_name);
+  test_g.open(g_name);
+  test_b.open(b_name);
 
 	float nextVerticalBorder = hStep;
 
@@ -228,10 +249,23 @@ void NuitrackGLSample::onNewRGBFrame(RGBFrame::Ptr frame)
 				nextHorizontalBorder += wStep;
 			}
 			texturePtr[0] = (colorPtr + col)->red;
+      test_r<<(int)texturePtr[0];
 			texturePtr[1] = (colorPtr + col)->green;
+      test_g<<(int)texturePtr[1];
 			texturePtr[2] = (colorPtr + col)->blue;
+      test_b<<(int)texturePtr[2];
+      //std::cout<<j<<std::endl;
+      if(j!=_width-1){
+        test_r<<",";
+        test_g<<",";
+        test_b<<",";
+      }
 		}
+    test_r<<std::endl;
+    test_g<<std::endl;
+    test_b<<std::endl;
 	}
+  sleep(1);
 }
 // Colorize user segments using Nuitrack User Tracker data
 void NuitrackGLSample::onUserUpdate(UserFrame::Ptr frame)
