@@ -5,7 +5,7 @@ project(${PROJECT_NAME})
 
 add_definitions(-std=c++11 -D_GLIBCXX_USE_CXX11_ABI=0)
 
-set(NUITRACK_INCLUDE_PATH ${CMAKE_CURRENT_LIST_DIR}/../../Nuitrack/include ${CMAKE_CURRENT_LIST_DIR}/../../Nuitrack/include/middleware)
+set(NUITRACK_INCLUDE_PATH /usr/local/include/nuitrack /usr/local/include/nuitrack/middleware)
 
 if(UNIX)
 	IF (CMAKE_SYSTEM_PROCESSOR MATCHES "^arm")
@@ -21,7 +21,7 @@ elseif(WIN32)
 	ENDIF()
 endif()
 
-set(NUITRACK_LIBRARY_PATH ${CMAKE_CURRENT_LIST_DIR}/../../Nuitrack/lib/${PLATFORM_DIR}) 
+set(NUITRACK_LIBRARY_PATH /usr/local/lib/nuitrack) 
 
 include_directories(
 	.
