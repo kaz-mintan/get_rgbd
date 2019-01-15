@@ -3,7 +3,7 @@ import os
 import numpy as np
 import cv2
 
-path = "/home/kazumi/prog/get_rgbd/console_capture_rgbd/build/rgbd/"
+path = "/home/kazumi/prog/get_rgbd/console_capture_rgbd/rgbd/"
 directory = os.listdir(path)
 
 for i in directory:

@@ -12,6 +12,8 @@ time_t timer;
 struct timeval myTime;
 struct tm *t_st;
 
+int _width = 640;
+int _height= 480;
 
 void showHelpInfo()
 {
@@ -26,9 +28,6 @@ void getDepth(DepthFrame::Ptr frame)
     std::cout << "No hand data" << std::endl;
     return;
   }
-
-  int _width = 640;
-  int _height= 480;
 
 	float wStep = (float)_width / frame->getCols();
 	float hStep = (float)_height / frame->getRows();
@@ -46,7 +45,7 @@ void getDepth(DepthFrame::Ptr frame)
   time(&timer);
   t_st=localtime(&timer);
 
-  sprintf(d_name,"rgbd/d-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
+  sprintf(d_name,"../rgbd/d-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
     t_st->tm_year+1900,
     t_st->tm_mon+1,
     t_st->tm_mday,
