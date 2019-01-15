@@ -20,6 +20,105 @@ void showHelpInfo()
   std::cout << "Usage: nuitrack_console_sample [path/to/nuitrack.config]" << std::endl;
 }
 
+void name_file(char *t_name, int mode)
+{
+
+	// Create all required Nuitrack modules
+  gettimeofday(&myTime,NULL);
+  t_st=localtime(&myTime.tv_sec);
+
+  time(&timer);
+  t_st=localtime(&timer);
+
+  sprintf(t_name,"../rgbd/%d-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
+    mode,
+    t_st->tm_year+1900,
+    t_st->tm_mon+1,
+    t_st->tm_mday,
+    t_st->tm_hour,
+    t_st->tm_min,
+    t_st->tm_sec,
+    myTime.tv_usec);
+
+}
+
+void getColor(RGBFrame::Ptr frame)
+{
+  const tdv::nuitrack::Color3* colorPtr = frame->getData();
+
+  float wStep = (float)_width / frame->getCols();
+  float hStep = (float)_height / frame->getRows();
+
+  char r_name[50];
+//  char g_name[50];
+//  char b_name[50];
+  FILE *fp_r;
+//  FILE *fp_g;
+//  FILE *fp_b;
+
+  name_file(r_name,0);
+  std::cout<<r_name<<"\n";
+//  name_file(g_name,1);
+//  name_file(b_name,2);
+
+  float nextVerticalBorder = hStep;
+
+  if(
+    (fp_r = fopen(r_name, "a")) != NULL){
+
+/*
+    (fp_r = fopen(r_name, "a")) != NULL&&
+    (fp_g = fopen(g_name, "a")) != NULL&&
+    (fp_b = fopen(b_name, "a")) != NULL){
+*/
+
+    for (size_t i = 0; i < _height; ++i)
+    {
+      if (i == (int)nextVerticalBorder)
+      {
+        nextVerticalBorder += hStep;
+        colorPtr += frame->getCols();
+        //depthPtr += frame->getCols();
+      }
+
+      int col = 0;
+      float nextHorizontalBorder = wStep;
+      //uint16_t depthValue = *depthPtr >> 5;
+
+      //for (size_t j = 0; j < _width; ++j, texturePtr += 3)
+      for (size_t j = 0; j < _width; ++j)
+      {
+        if (j == (int)nextHorizontalBorder)
+        {
+          ++col;
+          nextHorizontalBorder += wStep;
+        }
+
+        int r = (int)(colorPtr + col)->red;
+        int g = (int)(colorPtr + col)->green;
+        int b = (int)(colorPtr + col)->blue;
+
+        fprintf(fp_r,"%d,%d,%d",r,g,b);
+//        fprintf(fp_r,"%d",r);
+ //       fprintf(fp_g,"%d",g);
+ //       fprintf(fp_b,"%d",b);
+
+        if(j!=_width-1){
+          fprintf(fp_r,",");
+          //fprintf(fp_g,",");
+          //fprintf(fp_b,",");
+        }
+      }
+      fprintf(fp_r,"\n");
+      //fprintf(fp_g,"\n");
+      //fprintf(fp_b,"\n");
+    }
+  }
+  fclose(fp_r);
+  //fclose(fp_g);
+  //fclose(fp_b);
+}
+
 void getDepth(DepthFrame::Ptr frame)
 {
   if(!frame)
@@ -38,21 +137,10 @@ void getDepth(DepthFrame::Ptr frame)
   char d_name[50];// = "depth_sample.csv";
   FILE *fp_d;
 
-	// Create all required Nuitrack modules
-  gettimeofday(&myTime,NULL);
-  t_st=localtime(&myTime.tv_sec);
+  int mode = 3;
 
-  time(&timer);
-  t_st=localtime(&timer);
+  name_file(d_name,mode);
 
-  sprintf(d_name,"../rgbd/d-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
-    t_st->tm_year+1900,
-    t_st->tm_mon+1,
-    t_st->tm_mday,
-    t_st->tm_hour,
-    t_st->tm_min,
-    t_st->tm_sec,
-    myTime.tv_usec);
   std::cout<<d_name<<"\n";
 
   if((fp_d = fopen(d_name, "a")) != NULL)
@@ -112,14 +200,6 @@ void onHandUpdate(HandTrackerData::Ptr handData)
         std::cout << "Right hand of the first user is not found" << std::endl;
         return;
     }
-
-    /*
-    std::cout << std::fixed << std::setprecision(3);
-    std::cout << "Right hand position: "
-                 "x = " << rightHand->xReal << ", "
-                 "y = " << rightHand->yReal << ", "
-                 "z = " << rightHand->zReal << std::endl;
-    */
 }
 
 int main(int argc, char* argv[])
@@ -145,14 +225,14 @@ int main(int argc, char* argv[])
     std::cout<<"out\n";
     // Create HandTracker module, other required modules will be
     // created automatically
-    auto handTracker = HandTracker::create();
+    //auto handTracker = HandTracker::create();
     auto depthSensor = DepthSensor::create();
+    auto colorSensor = ColorSensor::create();
 
     // Connect onHandUpdate callback to receive hand tracking data
-    handTracker->connectOnUpdate(onHandUpdate);
-    //depthSensor->connectOnNewFrame(std::bind(&NuitrackGLSample::onNewDepthFrame, this, std::placeholders::_1));
-    depthSensor->connectOnNewFrame(getDepth);
-    //_outputMode = _depthSensor->getOutputMode();
+    //handTracker->connectOnUpdate(onHandUpdate);
+    //depthSensor->connectOnNewFrame(getDepth);
+    colorSensor->connectOnNewFrame(getColor);
 
     // Start Nuitrack
     try
@@ -174,6 +254,7 @@ int main(int argc, char* argv[])
             //Nuitrack::waitUpdate(handTracker);
 
             Nuitrack::waitUpdate(depthSensor);
+            Nuitrack::waitUpdate(colorSensor);
         }
         catch (LicenseNotAcquiredException& e)
         {
