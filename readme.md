@@ -1,3 +1,7 @@
+- 2019/01/15, kazumi
+
+  - added new dir which contains prog to get depthdata *withoud openGL*.
+
 - 2018/12/21, kazumi
 
   - to design a table of a mole-game experiment.
