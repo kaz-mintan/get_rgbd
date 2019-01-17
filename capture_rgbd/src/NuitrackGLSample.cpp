@@ -22,10 +22,10 @@ NuitrackGLSample::NuitrackGLSample() :
 	_textureBuffer(0),
 	_width(640),
 	_height(480),
-	_viewMode(DEPTH_SEGMENT_MODE),
+	_viewMode(RGB_MODE),
 //DEPTH_SEGMENT_MODE
 //RGB_MODE
-	_modesNumber(2),
+	_modesNumber(1),
 	_isInitialized(false)
 {}
 
@@ -82,14 +82,8 @@ void NuitrackGLSample::init(const std::string& config)
 
 	_skeletonTracker = SkeletonTracker::create();
 	// Bind to event update skeleton tracker
-	_skeletonTracker->connectOnUpdate(std::bind(&NuitrackGLSample::onSkeletonUpdate, this, std::placeholders::_1));
+//	_skeletonTracker->connectOnUpdate(std::bind(&NuitrackGLSample::onSkeletonUpdate, this, std::placeholders::_1));
 
-	_handTracker = HandTracker::create();
-	// Bind to event update Hand tracker
-	_handTracker->connectOnUpdate(std::bind(&NuitrackGLSample::onHandUpdate, this, std::placeholders::_1));
-
-	_gestureRecognizer = GestureRecognizer::create();
-	_gestureRecognizer->connectOnNewGestures(std::bind(&NuitrackGLSample::onNewGesture, this, std::placeholders::_1));
 }
 
 bool NuitrackGLSample::update()
@@ -118,7 +112,6 @@ bool NuitrackGLSample::update()
 		Nuitrack::waitUpdate(_skeletonTracker);
 		
 		renderTexture();
-		renderLines();
 	}
 	catch (const LicenseNotAcquiredException& e)
 	{
@@ -161,9 +154,6 @@ void NuitrackGLSample::release()
 void NuitrackGLSample::onNewDepthFrame(DepthFrame::Ptr frame)
 {
 
-//	if(_viewMode != DEPTH_SEGMENT_MODE)
-//		return;
-
 	uint8_t* texturePtr = _textureBuffer;
 	const uint16_t* depthPtr = frame->getData();
 	
@@ -174,8 +164,8 @@ void NuitrackGLSample::onNewDepthFrame(DepthFrame::Ptr frame)
 
   //test to save depth data
   char d_name[50];
-  std::ofstream test_d;
-  //sprintf(d_name,"%d.csv",t_st->tm_sec);
+  FILE *fp_d;
+
   sprintf(d_name,"rgbd/d-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
     t_st->tm_year+1900,
     t_st->tm_mon+1,
@@ -184,37 +174,42 @@ void NuitrackGLSample::onNewDepthFrame(DepthFrame::Ptr frame)
     t_st->tm_min,
     t_st->tm_sec,
     myTime.tv_usec);
-  test_d.open(d_name);
+  //test_d.open(d_name);
+  if((fp_d = fopen(d_name, "a")) != NULL){
 
-	for (size_t i = 0; i < _height; ++i)
-	{
-		if (i == (int)nextVerticalBorder)
-		{
-			nextVerticalBorder += hStep;
-			depthPtr += frame->getCols();
-		}
-		
-		int col = 0;
-		float nextHorizontalBorder = wStep;
-		uint16_t depthValue = *depthPtr >> 5;
-		
-		for (size_t j = 0; j < _width; ++j, texturePtr += 3)
-		{
-			if (j == (int)nextHorizontalBorder)
-			{
-				++col;
-				nextHorizontalBorder += wStep;
-				depthValue = *(depthPtr + col) >> 5;
-			}
-			
-			texturePtr[0] = depthValue;
-			texturePtr[1] = depthValue;
-			texturePtr[2] = depthValue;
-			test_d<<depthValue;
-      if(j!=_width-1)  test_d<<",";
-		}
-		test_d<<std::endl;
-	}
+    for (size_t i = 0; i < _height; ++i)
+    {
+      if (i == (int)nextVerticalBorder)
+      {
+        nextVerticalBorder += hStep;
+        depthPtr += frame->getCols();
+      }
+      
+      int col = 0;
+      float nextHorizontalBorder = wStep;
+      uint16_t depthValue = *depthPtr >> 5;
+      
+      for (size_t j = 0; j < _width; ++j, texturePtr += 3)
+      {
+        if (j == (int)nextHorizontalBorder)
+        {
+          ++col;
+          nextHorizontalBorder += wStep;
+          depthValue = *(depthPtr + col) >> 5;
+        }
+        
+        texturePtr[0] = depthValue;
+        texturePtr[1] = depthValue;
+        texturePtr[2] = depthValue;
+        //test_d<<depthValue;
+        fprintf(fp_d,"%d",depthValue);
+        if(j!=_width-1)  fprintf(fp_d,",");//test_d<<",";
+      }
+      //test_d<<std::endl;
+      fprintf(fp_d,"\n");
+    }
+  }
+  fclose(fp_d);
 }
 
 // Copy color frame data, received from Nuitrack, to texture to visualize
@@ -232,6 +227,9 @@ void NuitrackGLSample::onNewRGBFrame(RGBFrame::Ptr frame)
   char r_name[50];
   char g_name[50];
   char b_name[50];
+  FILE *fp_r;
+  FILE *fp_g;
+  FILE *fp_b;
 
   sprintf(r_name,"rgbd/r-%d%02d%02d-%02d-%02d-%02d-%06d.csv",
     t_st->tm_year+1900,
@@ -261,201 +259,91 @@ void NuitrackGLSample::onNewRGBFrame(RGBFrame::Ptr frame)
     myTime.tv_usec);
 
   //test to save rgb data
-  std::ofstream test_r;
-  std::ofstream test_g;
-  std::ofstream test_b;
-  //std::ofstream test_d;
-  test_r.open(r_name);
-  test_g.open(g_name);
-  test_b.open(b_name);
-  //test_d.open(d_name);
 
 	float nextVerticalBorder = hStep;
 
-	for (size_t i = 0; i < _height; ++i)
-	{
-		if (i == (int)nextVerticalBorder)
-		{
-			nextVerticalBorder += hStep;
-			colorPtr += frame->getCols();
-			//depthPtr += frame->getCols();
-		}
-
-		int col = 0;
-		float nextHorizontalBorder = wStep;
-		//uint16_t depthValue = *depthPtr >> 5;
-
-		//for (size_t j = 0; j < _width; ++j, texturePtr += 3)
-		for (size_t j = 0; j < _width; ++j)
-		{
-			if (j == (int)nextHorizontalBorder)
-			{
-				++col;
-				nextHorizontalBorder += wStep;
-        //depthValue = *(depthPtr+col)>>5;
-			}
-			test_r<<(int)(colorPtr + col)->red;
-			test_g<<(int)(colorPtr + col)->green;
-			test_b<<(int)(colorPtr + col)->blue;
-
-      if(j!=_width-1){
-        test_r<<",";
-        test_g<<",";
-        test_b<<",";
+  if(
+    (fp_r = fopen(r_name, "a")) != NULL&&
+    (fp_g = fopen(g_name, "a")) != NULL&&
+    (fp_b = fopen(b_name, "a")) != NULL){
+    for (size_t i = 0; i < _height; ++i)
+    {
+      if (i == (int)nextVerticalBorder)
+      {
+        nextVerticalBorder += hStep;
+        colorPtr += frame->getCols();
+        //depthPtr += frame->getCols();
       }
-		}
-    test_r<<std::endl;
-    test_g<<std::endl;
-    test_b<<std::endl;
-	}
+
+      int col = 0;
+      float nextHorizontalBorder = wStep;
+      //uint16_t depthValue = *depthPtr >> 5;
+
+      //for (size_t j = 0; j < _width; ++j, texturePtr += 3)
+      for (size_t j = 0; j < _width; ++j)
+      {
+        if (j == (int)nextHorizontalBorder)
+        {
+          ++col;
+          nextHorizontalBorder += wStep;
+          //depthValue = *(depthPtr+col)>>5;
+        }
+
+        int r = (int)(colorPtr + col)->red;
+        int g = (int)(colorPtr + col)->green;
+        int b = (int)(colorPtr + col)->blue;
+
+        fprintf(fp_r,"%d",r);
+        fprintf(fp_g,"%d",g);
+        fprintf(fp_b,"%d",b);
+
+        if(j!=_width-1){
+          fprintf(fp_r,",");
+          fprintf(fp_g,",");
+          fprintf(fp_b,",");
+        }
+      }
+      fprintf(fp_r,"\n");
+      fprintf(fp_g,"\n");
+      fprintf(fp_b,"\n");
+    }
+  }
+  fclose(fp_r);
+  fclose(fp_g);
+  fclose(fp_b);
 }
 // Colorize user segments using Nuitrack User Tracker data
 void NuitrackGLSample::onUserUpdate(UserFrame::Ptr frame)
 {
-	if(_viewMode != DEPTH_SEGMENT_MODE)
-		return;
 
-	static uint8_t colors[8][3] =
-	{
-	    {255, 0, 0},
-	    {0, 255, 0},
-	    {0, 0, 255},
-	    {255, 255, 0},
-	    
-	    {0, 255, 255},
-	    {255, 0, 255},
-	    {255, 255, 255},
-	    {127, 255, 0}
-	};
-	
-	uint8_t* texturePtr = _textureBuffer;
-	const uint16_t* labelPtr = frame->getData();
-	
-	float wStep = (float)_width / frame->getCols();
-	float hStep = (float)_height / frame->getRows();
-	
-	float nextVerticalBorder = hStep;
-	
-	for (size_t i = 0; i < _height; ++i)
-	{
-		if (i == (int)nextVerticalBorder)
-		{
-			nextVerticalBorder += hStep;
-			labelPtr += frame->getCols();
-		}
-		
-		int col = 0;
-		float nextHorizontalBorder = wStep;
-		uint16_t label = *labelPtr;
-		
-		for (size_t j = 0; j < _width; ++j, texturePtr += 3)
-		{
-			if (j == (int)nextHorizontalBorder)
-			{
-				++col;
-				nextHorizontalBorder += wStep;
-				label = *(labelPtr + col);
-			}
-			
-			if (label)
-			{
-				texturePtr[0] = colors[label & 7][0];
-				texturePtr[1] = colors[label & 7][1];
-				texturePtr[2] = colors[label & 7][2];
-			}
-		}
-	}
 }
 
 // Prepare visualization of skeletons, received from Nuitrack
 void NuitrackGLSample::onSkeletonUpdate(SkeletonData::Ptr userSkeletons)
 {
-	_lines.clear();
-	
-	auto skeletons = userSkeletons->getSkeletons();
-	for (auto skeleton: skeletons)
-	{
-		drawSkeleton(skeleton.joints);
-	}
+
 }
 
 // Prepare visualization of tracked hands
 void NuitrackGLSample::onHandUpdate(HandTrackerData::Ptr handData)
 {
-	_leftHandPointers.clear();
-	_rightHandPointers.clear();
-	
-	for (auto userHands : handData->getUsersHands())
-	{
-		if (userHands.leftHand)
-		{
-			_leftHandPointers.push_back(_width * userHands.leftHand->x);
-			_leftHandPointers.push_back(_height * userHands.leftHand->y);
-			if (userHands.leftHand->click)
-			{
-				_leftHandPointers.push_back(_width * userHands.leftHand->x);
-				_leftHandPointers.push_back(_height * userHands.leftHand->y);
-			}
-		}
-		
-		if (userHands.rightHand)
-		{
-			_rightHandPointers.push_back(_width * userHands.rightHand->x);
-			_rightHandPointers.push_back(_height * userHands.rightHand->y);
-			if (userHands.rightHand->click)
-			{
-				_rightHandPointers.push_back(_width * userHands.rightHand->x);
-				_rightHandPointers.push_back(_height * userHands.rightHand->y);
-			}
-		}
-	}
 }
 
 // Display information about gestures in the console
 void NuitrackGLSample::onNewGesture(GestureData::Ptr gestureData)
 {
-	_userGestures = gestureData->getGestures();
-	for (int i = 0; i < _userGestures.size(); ++i)
-	{
-		printf("Recognized %d from %d\n", _userGestures[i].type, _userGestures[i].userId);
-	}
 }
 
 // Helper function to draw a skeleton bone
 void NuitrackGLSample::drawBone(const Joint& j1, const Joint& j2)
 {
-	// Prepare line data for confident enough bones only
-	if (j1.confidence > 0.15 && j2.confidence > 0.15)
-	{
-		_lines.push_back(_width * j1.proj.x);
-		_lines.push_back(_height * j1.proj.y);
-		_lines.push_back(_width * j2.proj.x);
-		_lines.push_back(_height * j2.proj.y);
-	}
+
 }
 
 // Helper function to draw skeleton from Nuitrack data
 void NuitrackGLSample::drawSkeleton(const std::vector<Joint>& joints)
 {
-	// We need to draw a bone for every pair of neighbour joints
-	drawBone(joints[JOINT_HEAD], joints[JOINT_NECK]);
-	drawBone(joints[JOINT_NECK], joints[JOINT_LEFT_COLLAR]);
-	drawBone(joints[JOINT_LEFT_COLLAR], joints[JOINT_TORSO]);
-	drawBone(joints[JOINT_LEFT_COLLAR], joints[JOINT_LEFT_SHOULDER]);
-	drawBone(joints[JOINT_LEFT_COLLAR], joints[JOINT_RIGHT_SHOULDER]);
-	drawBone(joints[JOINT_WAIST], joints[JOINT_LEFT_HIP]);
-	drawBone(joints[JOINT_WAIST], joints[JOINT_RIGHT_HIP]);
-	drawBone(joints[JOINT_TORSO], joints[JOINT_WAIST]);
-	drawBone(joints[JOINT_LEFT_SHOULDER], joints[JOINT_LEFT_ELBOW]);
-	drawBone(joints[JOINT_LEFT_ELBOW], joints[JOINT_LEFT_WRIST]);
-	drawBone(joints[JOINT_LEFT_WRIST], joints[JOINT_LEFT_HAND]);
-	drawBone(joints[JOINT_RIGHT_SHOULDER], joints[JOINT_RIGHT_ELBOW]);
-	drawBone(joints[JOINT_RIGHT_ELBOW], joints[JOINT_RIGHT_WRIST]);
-	drawBone(joints[JOINT_RIGHT_WRIST], joints[JOINT_RIGHT_HAND]);
-	drawBone(joints[JOINT_RIGHT_HIP], joints[JOINT_RIGHT_KNEE]);
-	drawBone(joints[JOINT_LEFT_HIP], joints[JOINT_LEFT_KNEE]);
-	drawBone(joints[JOINT_RIGHT_KNEE], joints[JOINT_RIGHT_ANKLE]);
-	drawBone(joints[JOINT_LEFT_KNEE], joints[JOINT_LEFT_ANKLE]);
+
 }
 
 // Render prepared background texture
@@ -496,59 +384,7 @@ int NuitrackGLSample::power2(int n)
 // Visualize bones, joints and hand positions
 void NuitrackGLSample::renderLines()
 {
-	if (_lines.empty())
-		return;
-	
-	glEnableClientState(GL_VERTEX_ARRAY);
-	
-	glColor4f(1, 1, 1, 1);
-	
-	glLineWidth(6);
-	
-	glVertexPointer(2, GL_FLOAT, 0, _lines.data());
-	glDrawArrays(GL_LINES, 0, _lines.size() / 2);
-	
-	glLineWidth(1);
-	
-	glEnable(GL_POINT_SMOOTH);
-	glPointSize(16);
-	
-	glVertexPointer(2, GL_FLOAT, 0, _lines.data());
-	glDrawArrays(GL_POINTS, 0, _lines.size() / 2);
-	
-	if (!_leftHandPointers.empty())
-	{
-		glColor4f(1, 0, 0, 1);
-		glPointSize(16);
-		glVertexPointer(2, GL_FLOAT, 0, _leftHandPointers.data());
-		glDrawArrays(GL_POINTS, 0, 1);
-		if (_leftHandPointers.size() > 2)
-		{
-			glPointSize(24);
-			glVertexPointer(2, GL_FLOAT, 0, _leftHandPointers.data() + 2);
-			glDrawArrays(GL_POINTS, 0, 1);
-		}
-	}
-	
-	if (!_rightHandPointers.empty())
-	{
-		glColor4f(0, 0, 1, 1);
-		glPointSize(16);
-		glVertexPointer(2, GL_FLOAT, 0, _rightHandPointers.data());
-		glDrawArrays(GL_POINTS, 0, 1);
-		if (_rightHandPointers.size() > 2)
-		{
-			glPointSize(24);
-			glVertexPointer(2, GL_FLOAT, 0, _rightHandPointers.data() + 2);
-			glDrawArrays(GL_POINTS, 0, 1);
-		}
-	}
-	
-	glColor4f(1, 1, 1, 1);
-	glPointSize(1);
-	glDisable(GL_POINT_SMOOTH);
-	
-	glDisableClientState(GL_VERTEX_ARRAY);
+
 }
 
 void NuitrackGLSample::initTexture(int width, int height)
@@ -562,7 +398,7 @@ void NuitrackGLSample::initTexture(int width, int height)
 		delete[] _textureBuffer;
 	
 	_textureBuffer = new uint8_t[width * height * 3];
-	memset(_textureBuffer, 0, sizeof(uint8_t) * width * height * 3);
+//	memset(_textureBuffer, 0, sizeof(uint8_t) * width * height * 3);
 	
 	glBindTexture(GL_TEXTURE_2D, _textureID);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);

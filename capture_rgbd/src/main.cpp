@@ -6,35 +6,6 @@
 
 NuitrackGLSample sample;
 
-// Keyboard handler
-void keyboard(unsigned char key, int x, int y)
-{
-	switch (key)
-	{
-	// On Esc key press
-	case 27:
-	{
-		sample.release();
-		glutDestroyWindow(glutGetWindow());
-		exit(EXIT_FAILURE);
-	}
-
-	default:
-	{
-		// Do nothing otherwise
-		break;
-	}
-	}
-}
-
-void mouseClick(int button, int state, int x, int y)
-{
-	if(button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
-	{
-		sample.nextViewMode();
-	}
-}
-
 // Update tracking data and visualize it
 void display()
 {
@@ -84,13 +55,10 @@ int main(int argc, char* argv[])
 	glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
 	glutInitWindowSize(outputMode.xres, outputMode.yres);
 	glutCreateWindow("Nuitrack GL Sample (Nuitrack API)");
-	//glutSetCursor(GLUT_CURSOR_NONE);
 
 	// Connect GLUT callbacks
-	glutKeyboardFunc(keyboard);
 	glutDisplayFunc(display);
 	glutIdleFunc(idle);
-	glutMouseFunc(mouseClick);
 
 	// Setup OpenGL
 	glDisable(GL_DEPTH_TEST);
