@@ -1,3 +1,8 @@
+- 2019/01/15, kazumi
+
+  - added new dir which contains prog to get depthdata **withoud openGL**.
+
+
 - 2019/01/10, kazumi
 
   - merged develop branch to master branch. See capture_rgbd/ which allows a system to get/save rgb-d data.
