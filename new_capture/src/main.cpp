@@ -9,11 +9,11 @@
 #include <sys/time.h>
 
 #include "capture.h"
-#include "save.h"
+#include "save_log.h"
 
 #define BUF_SIZE (640*480*3) //huh??
-char cBuf[BUF_SIZE]
-char dBuf[BUF_SIZE] //should separate buffers for depth and color?
+char cBuf[BUF_SIZE];
+char dBuf[BUF_SIZE]; //should separate buffers for depth and color?
 unsigned int gIndex = 0;
 
 time_t timer;
@@ -46,15 +46,15 @@ int main(int argc, char* argv[])
 
     auto depthSensor = DepthSensor::create();
     auto colorSensor = ColorSensor::create();
-    pthread_t pthread_d;
-    pthread_t pthread_c;
+    pthread_t thre_d;
+    pthread_t thre_c;
     int mode_d = 0;
     int mode_c = 1;
 
     depthSensor->connectOnNewFrame(getDepth);
     colorSensor->connectOnNewFrame(getColor);
-    pthread_create(&pthread_d, NULL, &save_log, mode_d)
-    pthread_create(&pthread_c, NULL, &save_log, mode_c)
+    pthread_create(&thre_d, NULL, &save_log, &mode_d);
+    pthread_create(&thre_c, NULL, &save_log, &mode_c);
 
     // Start Nuitrack
     try

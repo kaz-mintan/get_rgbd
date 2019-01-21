@@ -25,7 +25,7 @@ void name_file(char *t_name, int mode)
 
 }
 
-void *save_log(int mode)
+void *save_log(void *mode)
 {
   char f_name[50];
   FILE *fp;
