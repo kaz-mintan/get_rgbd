@@ -28,10 +28,15 @@ include_directories(
 	${NUITRACK_INCLUDE_PATH}
 )
 
+find_package(Threads REQUIRED)
+
 link_directories(${NUITRACK_LIBRARY_PATH})
 
 set(SOURCES
-    src/main.cpp)
+    src/main.cpp
+    src/capture.cpp
+    src/save_log.cpp
+    )
     
 add_executable(${PROJECT_NAME} ${SOURCES})
 
